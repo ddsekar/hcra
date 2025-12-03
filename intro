@@ -2,19 +2,19 @@
 
 1.1 Purpose and Scope
 
-This Product Architecture Design Document outlines the architectural blueprint for ASTRA, a next-generation business process orchestration and automation platform. ASTRA is designed to provide workflow automation while adhering to strict requirements for data residency, security, and compliance by utilizing a decoupled, hybrid deployment model.
+This Architecture Design Document outlines the architectural blueprint for ASTRAflow platform, a next-gen business process orchestration and automation platform in cloud. ASTRAflow platform is designed to provide workflow automation while adhering to strict requirements for data residency, security, and compliance by utilizing a decoupled, hybrid deployment model.
 
-The core objective of ASTRA is to enable users to seamlessly design, deploy, and manage complex workflows in AWS cloud environment. This document details the structure, interaction, and responsibilities of the platform's distinct components.
+The core objective of ASTRAflow is to enable users to seamlessly design, deploy, and manage complex workflows in AWS cloud environment. This document details the structure, interaction, and responsibilities of the platform's distinct components.
 
 1.2 The Split-Plane Architecture
 
-ASTRA is built upon a Split-Plane Architecture, strategically dividing functionality into managed, proprietary services (the Control Plane) and customer-hosted, secure execution components (the Execution Plane). This approach ensures that the critical, sensitive execution of workflows and access to client-specific resources remains strictly within the client's environment (Bring-Your-Own-Cloud - BYOC), while the operational burden of design, deployment, and management is handled by ASTRA as a Software-as-a-Service (SaaS) offering.
+ASTRAflow platform is built upon a Split-Plane Architecture, strategically dividing functionality into managed, proprietary services (the Control Plane) and customer-hosted, secure execution components (the Execution Plane). This approach ensures that the critical, sensitive execution of workflows and access to client-specific resources remains strictly within the client's environment (Bring-Your-Own-Cloud - BYOC), while the operational burden of design, deployment, and management is handled by ASTRAflow platform as a Software-as-a-Service (SaaS) offering.
 
 The architecture is composed of three primary, logically separated components:
 
-A. The Control Plane (SaaS)
+A. Control Plane (SaaS)
 
-The Control Plane is the fully managed, multi-tenant SaaS component hosted and operated by the ASTRA platform team. It serves as the single source of truth for workflow management and governance.
+The Control Plane is the fully managed, multi-tenant SaaS component hosted and operated by the ASTRAflow platform team. It serves as a workflow management and governance module.
 
 Key Functions:
 
@@ -24,12 +24,10 @@ ASTRADeploy: Manages the promotion and deployment lifecycle of workflows to the 
 
 ASTRATenants: Manages the entire client lifecycle, including provisioning, configuration, and user/access management for each isolated tenant.
 
-ASTRAController: A dedicated remote agent responsible for maintaining the health of client-deployed infrastructure. It pushes updates, monitors the health of the Camunda 8 cluster, and facilitates remote debugging and bug fixes.
-
-Orchestration Core: Includes the core workflow orchestrator (Zeebe), dashboard, and metadata catalog. This core also manages the ASTRA Action Library, which is bundled and distributed via an ECS registry for deployment in the Client Cloud (ASTRAPlane).
+ControlCenter: &&&&&&&A dedicated remote agent responsible for maintaining the health of client-deployed infrastructure. It pushes updates, monitors the health of the Camunda 8 cluster, and facilitates remote debugging and bug fixes.########
 
 
-B. The ASTRAPlane (Strategic Execution Plane - BYOC)
+B. ASTRAPlane (Execution Plane - BYOC)
 
 The ASTRAPlane is the client-specific component, designed to be deployed and hosted within the client’s own AWS account. This component acts as a highly secure bridge between the managed Control Plane and the client's internal ecosystem.
 
