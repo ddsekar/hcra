@@ -1,0 +1,67 @@
+The updated Section 6.3 below replaces only the two relevant subsections while keeping the rest of the document intact.
+
+***
+
+### 6.3 Communication Security
+
+#### Control Plane to Zeebe
+
+- **Protocol**: gRPC over TLS 1.3  
+- **Authentication**: mTLS using client certificates issued by a trusted internal CA  
+- **Scope**: ASTRADeploy and ControlCenter communicate with Zeebe gateway for deployments and workflow control  
+
+#### Zeebe to ASTRAPlane (via AWS VPC Lattice)
+
+- **Protocol**:  
+  - Amazon VPC Lattice service network as the application-layer service mesh between the Zeebe VPC and tenant ASTRAPlane VPCs  
+  - HTTP/HTTPS over TLS as the transport protocol exposed by VPC Lattice endpoints[1][2]
+
+- **Authentication**:  
+  - AWS SigV4 request signing using IAM roles associated with Zeebe worker pods or tasks (IRSA for EKS or task roles for ECS)[3][4]
+  - Temporary credentials obtained via AWS STS; all calls to ASTRAPlane connector services are signed with SigV4 and include `Authorization`, `x-amz-date`, `x-amz-security-token`, and payload hash headers[4][3]
+
+- **Authorization**:  
+  - VPC Lattice **auth policies** on the service network and individual services define which IAM principals (Zeebe worker roles in the orchestrator account) can invoke ASTRAPlane services[5][6]
+  - Resource-based policies on Lattice services restrict access by AWS account, organization ID, and optionally source VPC, ensuring tenant-scoped access only[6][7]
+
+- **Network Isolation**:  
+  - Zeebe and ASTRAPlane VPCs are associated to a shared VPC Lattice service network, without requiring VPC peering or Transit Gateway  
+  - Security groups and Lattice-managed endpoints ensure only authorized Zeebe workers can reach ASTRAPlane connector services[8][9]
+
+- **Encryption**:  
+  - TLS termination handled by VPC Lattice with certificates from AWS Certificate Manager; optional HTTPS on the ASTRAPlane target to maintain end‑to‑end encryption[10][11]
+
+#### Control Plane to ASTRAPlane (Observability via CloudWatch OAM)
+
+- **Service**: Amazon CloudWatch Observability Access Manager (OAM) for cross-account observability  
+- **Protocol**:  
+  - AWS-managed CloudWatch cross-account observability data path over HTTPS; the Control Plane uses standard CloudWatch APIs (`GetMetricData`, `FilterLogEvents`, etc.) in the monitoring account while AWS handles secure linkage to tenant source accounts[12][13][14]
+
+- **Authentication**:  
+  - AWS SigV4 using IAM roles in the Control Plane monitoring account when calling CloudWatch APIs[13][15]
+  - In tenant accounts, OAM **links** are created that trust an OAM **sink** in the Control Plane account; AWS service-linked roles enable the data sharing without long‑lived credentials[14][16]
+
+- **Authorization**:  
+  - OAM sink policies (resource-based) in the Control Plane define which AWS accounts or organization IDs are allowed to create links and share specific telemetry types (metrics, logs, traces)[16][14]
+  - Per-tenant OAM links in ASTRAPlane accounts explicitly opt in to sharing selected CloudWatch data with the Control Plane sink, ensuring tenant-level isolation and least-privilege visibility[12][16]
+
+- **Data Residency & Isolation**:  
+  - Telemetry data (metrics, logs, traces) remains stored in the tenant’s AWS account and region; the Control Plane gains cross-account visibility without copying data, except where centralized log delivery is explicitly configured[17][12]
+
+[1](https://aws.amazon.com/blogs/security/modern-web-application-authentication-and-authorization-with-amazon-vpc-lattice/)
+[2](https://www.cloudthat.com/resources/blog/aws-vpc-lattice-the-future-of-cross-vpc-service-networking)
+[3](https://aws.amazon.com/blogs/containers/implement-aws-iam-authentication-with-amazon-vpc-lattice-and-amazon-eks/)
+[4](https://docs.aws.amazon.com/vpc-lattice/latest/ug/sigv4-authenticated-requests.html)
+[5](https://docs.aws.amazon.com/vpc-lattice/latest/ug/security.html)
+[6](https://docs.aws.amazon.com/vpc-lattice/latest/ug/auth-policies.html)
+[7](https://docs.aws.amazon.com/vpc-lattice/latest/ug/sharing.html)
+[8](https://dev.to/aws-builders/simplifying-cross-vpc-communication-with-aws-vpc-lattice-2779)
+[9](https://aws.amazon.com/blogs/networking-and-content-delivery/build-secure-multi-account-multi-vpc-connectivity-for-your-applications-with-amazon-vpc-lattice/)
+[10](https://aws.amazon.com/blogs/containers/secure-cross-cluster-communication-in-eks-with-vpc-lattice-and-pod-identity-iam-session-tags/)
+[11](https://aws.amazon.com/blogs/containers/application-networking-with-amazon-vpc-lattice-and-amazon-eks/)
+[12](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Unified-Cross-Account.html)
+[13](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Cross-Account-Methods.html)
+[14](https://docs.aws.amazon.com/OAM/latest/APIReference/Welcome.html)
+[15](https://aws-observability.github.io/observability-best-practices/guides/cloudwatch_cross_account_observability/)
+[16](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Unified-Cross-Account-Setup.html)
+[17](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/centralize-monitoring-by-using-amazon-cloudwatch-observability-access-manager.html)
