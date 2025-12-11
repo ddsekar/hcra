@@ -1,0 +1,44 @@
+POC 1: Basic BPMN workflow and deploy  
+- Model a simple BPMN.  
+- Deploy it to Zeebe via simple ASTRADeploy and confirm deployment metadata and versioning.
+
+POC 2: Alert ingestion and workflow triggering  
+- Integrate a sample alert source (AppHero) into ControlCenter.  
+- Prove alert‑to‑workflow mapping rules and workflow instance creation in Zeebe.
+
+POC 3: ASTRAPlane execution in customer account  
+- Deploy ASTRAPlane into a test customer AWS account with required IAM and networking.  
+- Show Zeebe jobs being pulled and executed in ASTRAPlane using customer credentials.
+
+POC 4: Connector execution and AWS integration  
+- Use at least one AWS connector (for example, Lambda/S3) inside the workflow.  
+- Validate successful task execution, error handling, and job completion back to Zeebe.
+
+POC 5: Monitoring and audit for the flow  
+- Capture execution metrics in CloudWatch (latency, errors, queue depth).  
+- Store and inspect execution/audit events in customer S3 to prove traceability end‑to‑end.
+- publish metrics to SNS
+
+POC 6: mTLS for service‑to‑service traffic
+Enable mutual TLS for Control Plane <-> Zeebe and Zeebe <-> ASTRAPlane job worker connections.
+Confirm certificate validation, encrypted channels, and rejection of unauthenticated clients.
+
+POC 7: ExecutionPlane deployment from container image in client VPC
+- Build and push the ExecutionPlane (ASTRAPlane) container image to ECR registry.
+- Deploy the ExecutionPlane stack in the client VPC using that image (via ECS Fargate), which wired to Zeebe and Control Plane endpoints through outbound‑only networking.
+
+POC 8: Tenant lifecycle and isolation
+- Create multiple tenants, deploy separate workflows for each, and verify isolation at UI, API, and database levels.
+- Confirm that users, executions, and audit data are visible only within their own tenant contexts.
+
+POC 9: Automated tenant onboarding
+- Use CFT/RefStack templates to provision tenant AWS resources (VPC, IAM roles, S3, CloudWatch, ECR) and deploy ASTRAPlane for that tenant.
+- Validate that a new tenant can be fully onboarded with minimal manual steps and is immediately ready for workflow deployment.
+
+POC 10: Connector runtime with core connectors
+- Run the connector runtime with at least one HTTP connector and one AWS connector (for example, Lambda or S3).
+- Verify retries, timeouts, and error‑handling behaviour, and ensure successful job completion is reported back to the workflow engine.
+
+POC 11: Execution audit and analytics
+- Generate immutable, encrypted execution audit trails into customer‑owned S3 buckets.
+
